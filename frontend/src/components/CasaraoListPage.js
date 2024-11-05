@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import CasaraoFormPage from './CasaraoFormPage';
 import { MdOutlineModeEdit } from 'react-icons/md';
-import { IoIosStarOutline, IoMdCheckmarkCircleOutline } from 'react-icons/io'; // Importar o ícone de checkmark
+import { IoIosStarOutline, IoMdCheckmarkCircleOutline } from 'react-icons/io';
 
 function CasaraoListPage({ isAdmin }) {
   const [casaroes, setCasaroes] = useState([]);
@@ -10,7 +10,8 @@ function CasaraoListPage({ isAdmin }) {
   const [error, setError] = useState(null);
   const [casaraoToEdit, setCasaraoToEdit] = useState(null);
   const [favoritos, setFavoritos] = useState([]);
-  const [visitados, setVisitados] = useState([]); // Estado para casarões visitados
+  const [visitados, setVisitados] = useState([]);
+  const [comentarios, setComentarios] = useState({}); // Estado para armazenar comentários
 
   const fetchCasaroes = async () => {
     try {
@@ -61,6 +62,7 @@ function CasaraoListPage({ isAdmin }) {
       : [...prev, casarao]
     );
   };
+
   const handleDeleteCasarao = async (casaraoId) => {
     try {
       const response = await fetch(`http://localhost:5000/casaroes/${casaraoId}`, {
@@ -69,14 +71,12 @@ function CasaraoListPage({ isAdmin }) {
   
       if (!response.ok) throw new Error(`Erro ao excluir o casarão: ${response.statusText}`);
   
-      // Atualizar a lista de casarões após a exclusão
       setCasaroes(prev => prev.filter(casarao => casarao.id !== casaraoId));
     } catch (error) {
       console.error('Erro ao excluir o casarão:', error);
       alert('Erro ao excluir o casarão: ' + error.message);
     }
   };
-  
 
   const handleCasaraoSubmit = async (novoCasarao) => {
     try {
@@ -107,6 +107,13 @@ function CasaraoListPage({ isAdmin }) {
     setShowList(false);
   };
 
+  const handleAddComment = (casaraoId, comment) => {
+    setComentarios((prev) => ({
+      ...prev,
+      [casaraoId]: [...(prev[casaraoId] || []), comment],
+    }));
+  };
+
   return (
     <div style={styles.container}>
       {showCadastro ? (
@@ -135,25 +142,29 @@ function CasaraoListPage({ isAdmin }) {
                       <h3>{casarao.name}</h3>
                       <p>{casarao.description}</p>
                       <p>{casarao.location}</p>
+
                       {casarao.image_path && (
                         <div style={styles.imageContainer}>
                           <img
-                            src={`http://localhost:5000/${casarao.image_path}`}
+                            src={`http://localhost:5000/casaroes/${casarao.image_path}`}
                             alt={casarao.name}
+                            onError={(e) => {
+                              console.error('Erro ao carregar a imagem:', e);
+                            }}
                             style={styles.image}
                           />
                         </div>
                       )}
                       {isAdmin && (
-  <>
-    <button onClick={() => handleEditClick(casarao)} style={styles.editButton}>
-      <MdOutlineModeEdit /> Editar
-    </button>
-    <button onClick={() => handleDeleteCasarao(casarao.id)} style={styles.deleteButton}>
-      Excluir
-    </button>
-  </>
-)}
+                        <>
+                          <button onClick={() => handleEditClick(casarao)} style={styles.editButton}>
+                            <MdOutlineModeEdit /> Editar
+                          </button>
+                          <button onClick={() => handleDeleteCasarao(casarao.id)} style={styles.deleteButton}>
+                            Excluir
+                          </button>
+                        </>
+                      )}
                       {!isAdmin && (
                         <>
                           <button onClick={() => handleFavoritar(casarao)} style={styles.favoritoButton}>
@@ -164,6 +175,27 @@ function CasaraoListPage({ isAdmin }) {
                           </button>
                         </>
                       )}
+                      
+                      {/* Seção de Comentários */}
+                      <div style={styles.comentariosContainer}>
+                        <h4>Comentários</h4>
+                        <ul>
+                          {(comentarios[casarao.id] || []).map((comment, index) => (
+                            <li key={index}>{comment}</li>
+                          ))}
+                        </ul>
+                        <input
+                          type="text"
+                          placeholder="Adicionar um comentário"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.target.value.trim()) {
+                              handleAddComment(casarao.id, e.target.value);
+                              e.target.value = ''; // Limpa o campo de entrada
+                            }
+                          }}
+                          style={styles.comentarioInput}
+                        />
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -201,6 +233,8 @@ function CasaraoListPage({ isAdmin }) {
     </div>
   );
 }
+
+
 const styles = {
   container: {
     padding: '20px',
@@ -236,48 +270,67 @@ const styles = {
   },
   listItem: {
     padding: '15px',
-    marginBottom: '10px',
-    borderRadius: '5px',
+    marginBottom: '15px', // Mais espaço entre os cards
+    borderRadius: '8px',
     backgroundColor: '#F5DEB3',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    transition: 'transform 0.2s',
+  },
+  imageContainer: {
+    overflow: 'hidden',
+    borderRadius: '5px',
+    marginBottom: '10px',
   },
   image: {
     width: '100%',
+    height: 'auto',
     borderRadius: '5px',
   },
   editButton: {
-    display: 'block', // Alinha o botão como um bloco
-    margin: '10px auto', // Centraliza o botão
-    padding: '10px 20px', // Adiciona preenchimento
-    backgroundColor: '#8B4513', // Cor de fundo burlywood
-    color: '#fff', // Cor do texto
-    border: 'none', // Remove borda
-    borderRadius: '5px', // Bordas arredondadas
-    cursor: 'pointer', // Muda o cursor para ponteiro
+    marginRight: '5px',
+    backgroundColor: '#FFA07A',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    width: '100px', 
+    height: '40px', 
+  },
+  deleteButton: {
+    backgroundColor: '#FF6347',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    width: '100px', 
+    height: '40px', 
+  },
+  
+  favoritoButton: {
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+  },
+  visitadoButton: {
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
   },
   favoritosContainer: {
     marginTop: '20px',
-    padding: '10px',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#FFF8DC',
+    padding: '15px',
     borderRadius: '5px',
-    border: '1px solid #ccc',
+    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
   },
-  favoritoButton: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    marginLeft: '10px',
+  comentariosContainer: {
+    marginTop: '10px',
   },
-  deleteButton: {
-    backgroundColor: 'red',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    padding: '5px 10px',
-    cursor: 'pointer',
-    marginLeft: '10px',
+  comentarioInput: {
+    marginTop: '10px',
+    width: '100%',
+    padding: '5px',
+    backgroundColor:'burlywood'
+    
   },
-
-
 };
 
 export default CasaraoListPage;

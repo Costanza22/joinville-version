@@ -11,7 +11,7 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
       setName(casaraoData.name);
       setDescription(casaraoData.description);
       setLocation(casaraoData.location);
-      setImage(null); // Mantenha como null se não quiser exibir a imagem anterior
+      setImage(casaraoData.image_path ? casaraoData.image_path : null); // Use o caminho da imagem
     } else {
       setName('');
       setDescription('');
@@ -28,12 +28,15 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
     formData.append('description', description);
     formData.append('location', location);
     formData.append('image', image);
-  
+
     if (casaraoData?.id) {
-      formData.append('id', casaraoData.id); // Inclui o ID se for uma edição
+      formData.append('id', casaraoData.id); 
     }
-  
-    onSubmit(formData);
+
+    console.log('Form data entries:', Array.from(formData.entries())); 
+    onSubmit(formData); 
+
+    // Reseta os campos após o envio
     setName('');
     setDescription('');
     setLocation('');
@@ -43,7 +46,7 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>{casaraoData ? 'Editar Casarão' : 'Cadastrar Novo Casarão'}</h2>
-      <form onSubmit={handleSubmit} style={styles.form}>
+      <form onSubmit={handleSubmit} style={styles.form} encType="multipart/form-data">
         <input
           type="text"
           placeholder="Nome do Casarão"
@@ -67,6 +70,16 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
           required
           style={styles.input}
         />
+        {image && (
+          <div>
+            <img
+              src={`http://localhost:5000/casaroes/${image}`} // Ajuste para a URL correta
+              alt={name}
+              style={{ width: '100%', height: 'auto', marginBottom: '10px' }} // Estilo da imagem
+            />
+            <p>Imagem atual: {image.name}</p>
+          </div>
+        )}
         <label htmlFor="fileInput" style={styles.fileLabel}>
           {image ? image.name : 'Escolher arquivo'}
         </label>
@@ -84,7 +97,6 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
   );
 }
 
-
 const styles = {
   container: {
     padding: '20px',
@@ -92,8 +104,8 @@ const styles = {
     fontFamily: 'Arial, sans-serif',
     borderRadius: '8px',
     maxWidth: '400px',
-    margin: '20px auto', // Adiciona margem
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // Adiciona sombra ao container
+    margin: '20px auto', 
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', 
   },
   title: {
     fontSize: '24px',
@@ -116,12 +128,12 @@ const styles = {
     margin: '5px 0',
     borderRadius: '5px',
     border: '1px solid #ccc',
-    resize: 'vertical', // Permite redimensionar verticalmente
+    resize: 'vertical', 
   },
   fileLabel: {
     padding: '10px',
     margin: '5px 0',
-    backgroundColor: '#8B4513', // Cor do botão
+    backgroundColor: '#8B4513', 
     color: '#fff',
     borderRadius: '5px',
     cursor: 'pointer',
@@ -130,27 +142,27 @@ const styles = {
     textDecoration: 'none',
   },
   fileInput: {
-    display: 'none', // Esconde o input de arquivo padrão
+    display: 'none', 
   },
   submitButton: {
     padding: '10px 20px',
-    backgroundColor: '#8B4513', // Cor do botão
+    backgroundColor: '#8B4513', 
     color: '#fff',
     border: 'none',
     borderRadius: '5px',
     cursor: 'pointer',
     marginTop: '10px',
-    transition: 'background-color 0.3s', // Adiciona efeito de transição
+    transition: 'background-color 0.3s', 
   },
   submitButtonHover: {
-    backgroundColor: '#5C3D2D', // Cor ao passar o mouse
+    backgroundColor: '#5C3D2D', 
   },
   imagePreview: {
     marginTop: '10px',
     textAlign: 'center',
   },
   previewImage: {
-    maxWidth: '200px', // Define a largura máxima da imagem
+    maxWidth: '200px', 
     height: 'auto',
   },
 };
