@@ -8,6 +8,9 @@ import cors from 'cors';
 const app = express();
 app.use(express.json());
 app.use(cors());
+// Servir arquivos estáticos da pasta 'uploads'
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 
 // Conexão ao banco de dados MySQL
 const db = mysql.createConnection({
@@ -68,6 +71,72 @@ app.get('/casaroes', (req, res) => {
       return res.status(500).json({ error: 'Erro ao consultar casarões' });
     }
     res.json(results);
+  });
+});
+
+// Rota para editar um casarão pelo ID, atualizando apenas os campos fornecidos
+app.put('/casaroes/:id', upload.single('image'), (req, res) => {
+  const { id } = req.params;
+  const { name, description, location } = req.body;
+  const image_path = req.file ? req.file.path : null;
+
+  // Cria uma consulta dinâmica com os campos que foram enviados
+  let sql = 'UPDATE casaroes SET ';
+  const values = [];
+  
+  if (name) {
+    sql += 'name = ?, ';
+    values.push(name);
+  }
+  if (description) {
+    sql += 'description = ?, ';
+    values.push(description);
+  }
+  if (location) {
+    sql += 'location = ?, ';
+    values.push(location);
+  }
+  if (image_path) {
+    sql += 'image_path = ?, ';
+    values.push(image_path);
+  }
+  
+  
+  sql = sql.slice(0, -2) + ' WHERE id = ?';
+  values.push(id);
+
+  db.query(sql, values, (err, results) => {
+    if (err) {
+      console.error('Erro ao atualizar o casarão:', err);
+      return res.status(500).json({ error: 'Erro ao atualizar o casarão' });
+    }
+    
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ error: 'Casarão não encontrado' });
+    }
+
+    res.status(200).json({ message: 'Casarão atualizado com sucesso' });
+  });
+});
+
+
+// Rota para excluir um casarão pelo ID
+app.delete('/casaroes/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = 'DELETE FROM casaroes WHERE id = ?';
+
+  db.query(sql, [id], (err, results) => {
+    if (err) {
+      console.error('Erro ao excluir o casarão:', err); // Log detalhado do erro
+      return res.status(500).json({ error: 'Erro ao excluir o casarão' });
+    }
+    
+    // Verifica se algum registro foi afetado
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ error: 'Casarão não encontrado' });
+    }
+
+    res.status(200).json({ message: 'Casarão excluído com sucesso' });
   });
 });
 
