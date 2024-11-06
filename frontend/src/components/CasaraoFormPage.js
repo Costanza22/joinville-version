@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Para o Google Maps
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+
 
 function CasaraoFormPage({ onSubmit, casaraoData }) {
   const [name, setName] = useState('');
@@ -106,18 +105,6 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
           style={styles.input}
         />
         
-        <div style={styles.mapContainer}>
-          <LoadScript googleMapsApiKey="AIzaSyA1Msqw2XkhzVdam9YV9A-YLB5TcRqDHBc">
-            <GoogleMap
-              id="casarao-map"
-              mapContainerStyle={{ width: '100%', height: '300px' }}
-              center={coordinates}
-              zoom={15}
-            >
-              <Marker position={coordinates} />
-            </GoogleMap>
-          </LoadScript>
-        </div>
 
         {image && (
           <div>
@@ -214,11 +201,7 @@ const styles = {
     maxWidth: '200px', 
     height: 'auto',
   },
-  mapContainer: {
-    width: '100%',
-    height: '300px',
-    margin: '20px 0',
-  },
+ 
 };
 
 export default CasaraoFormPage;
