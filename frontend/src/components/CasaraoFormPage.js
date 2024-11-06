@@ -8,8 +8,7 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
   const [location, setLocation] = useState('');
   const [cep, setCep] = useState(''); // Novo campo para o CEP
   const [image, setImage] = useState(null);
-  const [coordinates, setCoordinates] = useState({ lat: -23.5505, lng: -46.6333 }); // Coordenadas iniciais (exemplo para São Paulo)
-
+   
   useEffect(() => {
     if (casaraoData) {
       setName(casaraoData.name);
@@ -31,13 +30,10 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
         
         // Se a API retornar o endereço, usamos o Google Geocoding para obter lat/lng
         if (data.localidade) {
-          const geocodeResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${data.logradouro},${data.localidade},${data.uf}&key=YOUR_GOOGLE_API_KEY`);
-          const geocodeData = await geocodeResponse.json();
+          
+          
 
-          if (geocodeData.status === "OK") {
-            const { lat, lng } = geocodeData.results[0].geometry.location;
-            setCoordinates({ lat, lng });
-          }
+          
         }
       } catch (error) {
         console.error('Erro ao buscar CEP:', error);

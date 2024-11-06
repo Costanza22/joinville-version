@@ -327,9 +327,12 @@ const styles = {
     marginBottom: '10px',
   },
   image: {
-    width: '100%',
-    height: 'auto',
+    width: '300px',  /* Tamanho fixo para a largura */
+    height: 'auto',  /* Mantém a proporção da imagem */
     borderRadius: '5px',
+  
+  
+
   },
   editButton: {
     marginRight: '5px',
@@ -376,19 +379,7 @@ const styles = {
     backgroundColor:'burlywood'
     
   },
-  imageContainer: {
-    display: 'flex',
-    justifyContent: 'center',  
-    alignItems: 'center',
-    marginBottom: '20px',  
-  },
-  image: {
-    width: '400px',  
-    height: 'auto',  
-    border: '5px solid #ccc',  
-    borderRadius: '8px',  
-    objectFit: 'cover',  
-  },
+  
   buttonHover: {
     backgroundColor: '#45a049',
   },
