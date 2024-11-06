@@ -1,24 +1,50 @@
 import React, { useState, useEffect } from 'react';
 
+// Para o Google Maps
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+
 function CasaraoFormPage({ onSubmit, casaraoData }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [cep, setCep] = useState(''); // Novo campo para o CEP
   const [image, setImage] = useState(null);
+  const [coordinates, setCoordinates] = useState({ lat: -23.5505, lng: -46.6333 }); // Coordenadas iniciais (exemplo para São Paulo)
 
   useEffect(() => {
     if (casaraoData) {
       setName(casaraoData.name);
       setDescription(casaraoData.description);
       setLocation(casaraoData.location);
-      setImage(casaraoData.image_path ? casaraoData.image_path : null); // Use o caminho da imagem
-    } else {
-      setName('');
-      setDescription('');
-      setLocation('');
-      setImage(null);
+      setCep(casaraoData.cep || ''); // Se o casarão tiver CEP, já preencher
+      setImage(casaraoData.image_path ? casaraoData.image_path : null);
     }
   }, [casaraoData]);
+
+  const handleCepChange = async (e) => {
+    setCep(e.target.value);
+
+    // Se o CEP tiver 8 dígitos, buscar coordenadas
+    if (e.target.value.length === 8) {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${e.target.value}/json/`);
+        const data = await response.json();
+        
+        // Se a API retornar o endereço, usamos o Google Geocoding para obter lat/lng
+        if (data.localidade) {
+          const geocodeResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${data.logradouro},${data.localidade},${data.uf}&key=YOUR_GOOGLE_API_KEY`);
+          const geocodeData = await geocodeResponse.json();
+
+          if (geocodeData.status === "OK") {
+            const { lat, lng } = geocodeData.results[0].geometry.location;
+            setCoordinates({ lat, lng });
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
+      }
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,6 +53,7 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
     formData.append('name', name);
     formData.append('description', description);
     formData.append('location', location);
+    formData.append('cep', cep); // Adicionando o CEP
     formData.append('image', image);
 
     if (casaraoData?.id) {
@@ -36,10 +63,10 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
     console.log('Form data entries:', Array.from(formData.entries())); 
     onSubmit(formData); 
 
-    // Reseta os campos após o envio
     setName('');
     setDescription('');
     setLocation('');
+    setCep('');
     setImage(null);
   };
 
@@ -70,16 +97,39 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
           required
           style={styles.input}
         />
+        <input
+          type="text"
+          placeholder="CEP"
+          value={cep}
+          onChange={handleCepChange}
+          maxLength="8"
+          style={styles.input}
+        />
+        
+        <div style={styles.mapContainer}>
+          <LoadScript googleMapsApiKey="AIzaSyA1Msqw2XkhzVdam9YV9A-YLB5TcRqDHBc">
+            <GoogleMap
+              id="casarao-map"
+              mapContainerStyle={{ width: '100%', height: '300px' }}
+              center={coordinates}
+              zoom={15}
+            >
+              <Marker position={coordinates} />
+            </GoogleMap>
+          </LoadScript>
+        </div>
+
         {image && (
           <div>
             <img
               src={`http://localhost:5000/casaroes/${image}`} // Ajuste para a URL correta
               alt={name}
-              style={{ width: '100%', height: 'auto', marginBottom: '10px' }} // Estilo da imagem
+              style={{ width: '100%', height: 'auto', marginBottom: '10px' }}
             />
             <p>Imagem atual: {image.name}</p>
           </div>
         )}
+
         <label htmlFor="fileInput" style={styles.fileLabel}>
           {image ? image.name : 'Escolher arquivo'}
         </label>
@@ -96,7 +146,6 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
     </div>
   );
 }
-
 const styles = {
   container: {
     padding: '20px',
@@ -164,6 +213,11 @@ const styles = {
   previewImage: {
     maxWidth: '200px', 
     height: 'auto',
+  },
+  mapContainer: {
+    width: '100%',
+    height: '300px',
+    margin: '20px 0',
   },
 };
 

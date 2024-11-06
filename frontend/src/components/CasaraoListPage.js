@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import CasaraoFormPage from './CasaraoFormPage';
 import { MdOutlineModeEdit } from 'react-icons/md';
 import { IoIosStarOutline, IoMdCheckmarkCircleOutline } from 'react-icons/io';
+import { BsFillPatchQuestionFill } from 'react-icons/bs';
 
 function CasaraoListPage({ isAdmin }) {
   const [casaroes, setCasaroes] = useState([]);
@@ -11,7 +12,10 @@ function CasaraoListPage({ isAdmin }) {
   const [casaraoToEdit, setCasaraoToEdit] = useState(null);
   const [favoritos, setFavoritos] = useState([]);
   const [visitados, setVisitados] = useState([]);
-  const [comentarios, setComentarios] = useState({}); // Estado para armazenar comentários
+  const [comentarios, setComentarios] = useState({});
+  const [showInput, setShowInput] = useState(false); 
+  const [suggestion, setSuggestion] = useState(''); 
+  const [successMessage, setSuccessMessage] = useState(''); 
 
   const fetchCasaroes = async () => {
     try {
@@ -45,6 +49,14 @@ function CasaraoListPage({ isAdmin }) {
     if (!showList) {
       fetchCasaroes();
     }
+  };
+  const handleIconClick = () => {
+    setShowInput(!showInput); // Alterna a exibição do input
+  };
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setSuccessMessage('Sugestão enviada com sucesso!');
+    setSuggestion('');
   };
 
   const handleFavoritar = (casarao) => {
@@ -123,7 +135,31 @@ function CasaraoListPage({ isAdmin }) {
         />
       ) : (
         <>
-          <h2 style={styles.title}>Lista de Casarões</h2>
+          <h2 style={styles.title}>
+        Lista de Casarões
+        <BsFillPatchQuestionFill onClick={handleIconClick} style={{ cursor: 'pointer', marginLeft: '10px' }} />
+      </h2>
+
+      {showInput && (
+        <div style={styles.formContainer}>
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              value={suggestion}
+              onChange={(e) => setSuggestion(e.target.value)}
+              placeholder="Digite sua sugestão"
+              style={styles.input}
+            />
+            <button type="submit" style={styles.button}>
+              Enviar
+            </button>
+          </form>
+        </div>
+      )}
+
+      {successMessage && <p style={styles.successMessage}>{successMessage}</p>}
+    
+    
           <button onClick={handleConsultarClick} style={styles.button}>
             {showList ? 'Fechar Casarões' : 'Consultar Casarões'}
           </button>
@@ -144,16 +180,19 @@ function CasaraoListPage({ isAdmin }) {
                       <p>{casarao.location}</p>
 
                       {casarao.image_path && (
-                        <div style={styles.imageContainer}>
-                          <img
-                            src={`http://localhost:5000/casaroes/${casarao.image_path}`}
-                            alt={casarao.name}
-                            onError={(e) => {
-                              console.error('Erro ao carregar a imagem:', e);
-                            }}
-                            style={styles.image}
-                          />
-                        </div>
+  <div style={styles.imageContainer}>
+    <img
+      src={`http://localhost:5000/${casarao.image_path}`}
+      alt={casarao.name}
+      onError={(e) => {
+        console.error('Erro ao carregar a imagem:', e);
+      }}
+      style={styles.image}
+    />
+  </div>
+
+
+
                       )}
                       {isAdmin && (
                         <>
@@ -231,22 +270,28 @@ function CasaraoListPage({ isAdmin }) {
         </>
       )}
     </div>
+    
   );
 }
 
 
+
 const styles = {
   container: {
-    padding: '20px',
-    backgroundColor: 'Burlywood',
-    fontFamily: 'Arial, sans-serif',
-    borderRadius: '8px',
+    padding: '30px',
+    backgroundColor: '#F4E1C1', 
+    fontFamily: 'Georgia, serif', 
+    borderRadius: '12px',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.1)', 
   },
   title: {
-    fontSize: '24px',
-    color: '#333',
+    fontSize: '36px', 
+    color: '#6B3E26', 
     textAlign: 'center',
-    marginBottom: '20px',
+    marginBottom: '25px',
+    fontWeight: 'bold',
+    textTransform: 'uppercase', 
+    letterSpacing: '3px', 
   },
   button: {
     display: 'block',
@@ -270,7 +315,7 @@ const styles = {
   },
   listItem: {
     padding: '15px',
-    marginBottom: '15px', // Mais espaço entre os cards
+    marginBottom: '15px', 
     borderRadius: '8px',
     backgroundColor: '#F5DEB3',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
@@ -331,6 +376,39 @@ const styles = {
     backgroundColor:'burlywood'
     
   },
+  imageContainer: {
+    display: 'flex',
+    justifyContent: 'center',  
+    alignItems: 'center',
+    marginBottom: '20px',  
+  },
+  image: {
+    width: '400px',  
+    height: 'auto',  
+    border: '5px solid #ccc',  
+    borderRadius: '8px',  
+    objectFit: 'cover',  
+  },
+  buttonHover: {
+    backgroundColor: '#45a049',
+  },
+  successMessage: {
+    marginTop: '20px',
+    color: '#4CAF50',
+    fontSize: '18px',
+    fontWeight: 'bold',
+  },
+  input: {
+    padding: '10px',
+    width: '300px',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+    marginRight: '10px',
+    fontSize: '16px',
+  },
+  
+  
+  
 };
 
 export default CasaraoListPage;
