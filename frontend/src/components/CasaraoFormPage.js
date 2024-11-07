@@ -6,18 +6,27 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
-  const [cep, setCep] = useState(''); // Novo campo para o CEP
+  const [cep, setCep] = useState(''); 
   const [image, setImage] = useState(null);
+  const [constructionDate, setConstructionDate] = useState('');
    
   useEffect(() => {
-    if (casaraoData) {
-      setName(casaraoData.name);
-      setDescription(casaraoData.description);
-      setLocation(casaraoData.location);
-      setCep(casaraoData.cep || ''); // Se o casarão tiver CEP, já preencher
-      setImage(casaraoData.image_path ? casaraoData.image_path : null);
+  if (casaraoData) {
+    setName(casaraoData.name);
+    setDescription(casaraoData.description);
+    setLocation(casaraoData.location);
+    setCep(casaraoData.cep || '');
+    setImage(casaraoData.image_path ? casaraoData.image_path : null);
+
+    if (casaraoData.constructionDate) {
+      const date = new Date(casaraoData.constructionDate);
+      const formattedDate = date.toISOString().split('T')[0]; // Garantir apenas a data no formato YYYY-MM-DD
+      setConstructionDate(formattedDate);
+    } else {
+      setConstructionDate('');
     }
-  }, [casaraoData]);
+  }
+}, [casaraoData]);
 
   const handleCepChange = async (e) => {
     setCep(e.target.value);
@@ -50,18 +59,26 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
     formData.append('location', location);
     formData.append('cep', cep); // Adicionando o CEP
     formData.append('image', image);
+    formData.append('date', constructionDate);
 
+    if (constructionDate) {
+      const formattedDate = new Date(constructionDate).toISOString().split('T')[0];
+      formData.append('constructionDate', formattedDate);
+    } else {
+      formData.append('constructionDate', '');
+    }
+  
     if (casaraoData?.id) {
       formData.append('id', casaraoData.id); 
     }
-
-    console.log('Form data entries:', Array.from(formData.entries())); 
+  
     onSubmit(formData); 
 
     setName('');
     setDescription('');
     setLocation('');
     setCep('');
+    setConstructionDate('');
     setImage(null);
   };
 
@@ -100,7 +117,13 @@ function CasaraoFormPage({ onSubmit, casaraoData }) {
           maxLength="8"
           style={styles.input}
         />
-        
+          <input
+          type="date" // Campo de data
+          placeholder="Data de Construção"
+          value={constructionDate}
+          onChange={(e) => setConstructionDate(e.target.value)}
+          style={styles.input}
+        />
 
         {image && (
           <div>

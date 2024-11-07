@@ -178,6 +178,9 @@ function CasaraoListPage({ isAdmin }) {
                       <h3>{casarao.name}</h3>
                       <p>{casarao.description}</p>
                       <p>{casarao.location}</p>
+                      <p>Data: {casarao.date ? casarao.date.split('T')[0] : 'Data não disponível'}</p>
+
+
 
                       {casarao.image_path && (
   <div style={styles.imageContainer}>
