@@ -8,9 +8,9 @@ import cors from 'cors';
 const app = express();
 app.use(express.json());
 app.use(cors());
+
 // Servir arquivos estáticos da pasta 'uploads'
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-
 
 // Conexão ao banco de dados MySQL
 const db = mysql.createConnection({
@@ -22,7 +22,7 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
   if (err) {
-    console.error('Erro ao conectar ao MySQL:', err); // Log de erro de conexão
+    console.error('Erro ao conectar ao MySQL:', err);
     return;
   }
   console.log('Conectado ao MySQL');
@@ -32,52 +32,51 @@ db.connect((err) => {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = 'uploads/';
-    // Cria o diretório se não existir
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);
     }
-    cb(null, uploadDir); // Diretório de destino
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Nome único para o arquivo
+    cb(null, Date.now() + path.extname(file.originalname));
   }
 });
 
 const upload = multer({ storage });
 
 app.post('/casaroes', upload.single('image'), (req, res) => {
-  console.log('Request Body:', req.body); // Log do corpo da requisição
-  console.log('Uploaded File:', req.file); // Log do arquivo enviado
-
-  const { name, description, location } = req.body; 
+  console.log('Dados recebidos:', req.body);  // Verifica se `date` está presente no corpo da requisição
+  const { name, description, location, cep, date } = req.body; 
   const image_path = req.file ? req.file.path : null;
 
-  const sql = 'INSERT INTO casaroes (name, description, location, image_path) VALUES (?, ?, ?, ?)';
-  db.query(sql, [name, description, location, image_path], (err, results) => {
+  const sql = 'INSERT INTO casaroes (name, description, location, cep, image_path, date) VALUES (?, ?, ?, ?, ?, ?)';
+  db.query(sql, [name, description, location, cep, image_path, date || null], (err, results) => {
     if (err) {
-      console.error('Erro ao cadastrar o casarão:', err); // Log detalhado do erro
+      console.error('Erro ao cadastrar o casarão:', err);
       return res.status(500).json({ error: 'Erro ao cadastrar o casarão' });
     }
-    res.status(201).json({ id: results.insertId, name, description, location, image_path });
+    res.status(201).json({ id: results.insertId, name, description, location, cep, image_path, date });
   });
 });
 
+
 // Rota para consultar todos os casarões
 app.get('/casaroes', (req, res) => {
-  const sql = 'SELECT id, name, description, location, image_path FROM casaroes';
+  const sql = 'SELECT id, name, description, location, image_path, date FROM casaroes';
   db.query(sql, (err, results) => {
     if (err) {
-      console.error('Erro ao consultar casarões:', err); // Log detalhado do erro
+      console.error('Erro ao consultar casarões:', err);
       return res.status(500).json({ error: 'Erro ao consultar casarões' });
     }
     res.json(results);
   });
 });
 
+
 // Rota para editar um casarão pelo ID, atualizando apenas os campos fornecidos
 app.put('/casaroes/:id', upload.single('image'), (req, res) => {
   const { id } = req.params;
-  const { name, description, location } = req.body;
+  const { name, description, location, cep, date } = req.body;
   const image_path = req.file ? req.file.path : null;
 
   // Cria uma consulta dinâmica com os campos que foram enviados
@@ -96,11 +95,18 @@ app.put('/casaroes/:id', upload.single('image'), (req, res) => {
     sql += 'location = ?, ';
     values.push(location);
   }
+  if (cep) {
+    sql += 'cep = ?, ';
+    values.push(cep);
+  }
+  if (date) {
+    sql += 'date = ?, ';
+    values.push(date);
+  }
   if (image_path) {
     sql += 'image_path = ?, ';
     values.push(image_path);
   }
-  
   
   sql = sql.slice(0, -2) + ' WHERE id = ?';
   values.push(id);
@@ -119,7 +125,6 @@ app.put('/casaroes/:id', upload.single('image'), (req, res) => {
   });
 });
 
-
 // Rota para excluir um casarão pelo ID
 app.delete('/casaroes/:id', (req, res) => {
   const { id } = req.params;
@@ -127,11 +132,10 @@ app.delete('/casaroes/:id', (req, res) => {
 
   db.query(sql, [id], (err, results) => {
     if (err) {
-      console.error('Erro ao excluir o casarão:', err); // Log detalhado do erro
+      console.error('Erro ao excluir o casarão:', err);
       return res.status(500).json({ error: 'Erro ao excluir o casarão' });
     }
     
-    // Verifica se algum registro foi afetado
     if (results.affectedRows === 0) {
       return res.status(404).json({ error: 'Casarão não encontrado' });
     }
